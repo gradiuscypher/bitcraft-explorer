@@ -1,0 +1,27 @@
+[project]
+name = "bitcraft-explorer"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "httpx>=0.28.1",
+    "python-dotenv[cli]>=1.1.1",
+    "websockets>=15.0.1",
+]
+
+[dependency-groups]
+dev = [
+    "ipython>=9.4.0",
+    "ruff>=0.12.5",
+]
+
+[tool.ruff]
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = ["D", "T201", "E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]
