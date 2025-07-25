@@ -1,6 +1,6 @@
 """
 TODO:
-- List of chatters to swap their avatar for so that it's easier to visually identify them
+- Filter by empire and claim, add string names to the channel name
 """
 
 import colorsys
@@ -59,17 +59,27 @@ def send_webhook(msg: str, author: str, channel: str, avatar_url: str) -> None:
     r.raise_for_status()
 
 
-def chat_to_discord() -> None:
+def chat_to_discord(channel_id_filters: dict[int, str] | None = None) -> None:
     chat_lookup = {3: "region", 4: "claim", 5: "empire", 2: "local"}
     for msg in subscribe_to_query_generator("select * from chat_message_state where timestamp > 1753422348"):
         if "TransactionUpdate" in msg:
             message_obj = json.loads(msg["TransactionUpdate"]["status"]["Committed"]["tables"][0]["updates"][0]["inserts"][0])
-            channel = f"[{chat_lookup[message_obj[3]]}:{message_obj[4]}]"
+
             author = message_obj[1]
+            channel_type = message_obj[3]
+            channel_id = message_obj[4]
             chat_message = message_obj[5]
 
-            print(f"{channel} <{author}> {chat_message}")
-            send_webhook(chat_message, author, channel, avatar_url=pick_avatar_url(channel))
+            if channel_type == 2 and channel_id_filters and channel_id not in channel_id_filters:
+                continue
+
+            if channel_type == 2 and channel_id_filters:
+                channel_str = f"[{chat_lookup[channel_type]}:{channel_id_filters[channel_id]}]"
+            else:
+                channel_str = f"[{chat_lookup[channel_type]}:{channel_id}]"
+
+            print(f"{channel_str} <{author}> {chat_message}")
+            send_webhook(chat_message, author, channel_str, avatar_url=pick_avatar_url(channel_str))
 
 
 def generate_avatar(filename: str, n_variations: int = 5, *, change_background: bool = True, dramatic_differences: bool = True) -> list[str]:
